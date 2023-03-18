@@ -18,7 +18,7 @@ import javax.persistence.*;
 public class TripBooking {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int tripBookingid;
+    private int tripBookingId;
     private String fromLocation;
     private String toLocation;
     private int distanceInKm;
