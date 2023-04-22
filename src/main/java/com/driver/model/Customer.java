@@ -15,7 +15,7 @@ import java.util.List;
 public class Customer {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int customerid;
+    private int customerId;
     private String mobile;
     private String password;
     @OneToMany(mappedBy = "customer",cascade = CascadeType.ALL)
@@ -24,19 +24,19 @@ public class Customer {
     public Customer() {
     }
 
-    public Customer(int customerid, String mobile, String password, List<TripBooking> tripBookingList) {
-        this.customerid = customerid;
+    public Customer(int customerId, String mobile, String password, List<TripBooking> tripBookingList) {
+        this.customerId = customerId;
         this.mobile = mobile;
         this.password = password;
         this.tripBookingList = tripBookingList;
     }
 
     public int getCustomerid() {
-        return customerid;
+        return customerId;
     }
 
     public void setCustomerid(int customerid) {
-        this.customerid = customerid;
+        this.customerId = customerId;
     }
 
     public String getMobile() {
