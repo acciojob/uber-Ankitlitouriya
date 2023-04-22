@@ -1,39 +1,30 @@
 package com.driver.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
 import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
-@Entity
 
-@Table(name = "driver")
-public class Driver {
+@Entity
+public class Driver{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int driverId;
     private String mobile;
     private String password;
-
-    //Assuming the driver is the parent entity wrt to cab
+    @OneToMany(mappedBy = "driver", cascade = CascadeType.ALL)
+    private List<TripBooking> tripBookingList=new ArrayList<>();
     @OneToOne(mappedBy = "driver",cascade = CascadeType.ALL)
-    private Cab cab;
+    Cab cab;
 
-    @OneToMany(mappedBy = "driver",cascade = CascadeType.ALL)
-    private List<TripBooking> tripBookingList = new ArrayList<>();
-
-    public Driver() {
-    }
-
-    public Driver(int driverId, String mobile, String password, Cab cab, List<TripBooking> tripBookingList) {
+    public Driver(int driverId, String mobile, String password, List<TripBooking> tripBookingList, Cab cab) {
         this.driverId = driverId;
         this.mobile = mobile;
         this.password = password;
-        this.cab = cab;
         this.tripBookingList = tripBookingList;
+        this.cab = cab;
+    }
+
+    public Driver() {
     }
 
     public int getDriverId() {
@@ -60,19 +51,19 @@ public class Driver {
         this.password = password;
     }
 
-    public Cab getCab() {
-        return cab;
-    }
-
-    public void setCab(Cab cab) {
-        this.cab = cab;
-    }
-
     public List<TripBooking> getTripBookingList() {
         return tripBookingList;
     }
 
     public void setTripBookingList(List<TripBooking> tripBookingList) {
         this.tripBookingList = tripBookingList;
+    }
+
+    public Cab getCab() {
+        return cab;
+    }
+
+    public void setCab(Cab cab) {
+        this.cab = cab;
     }
 }

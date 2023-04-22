@@ -1,20 +1,26 @@
 package com.driver.services.impl;
 
-import com.driver.model.TripBooking;
+import com.driver.model.*;
 import com.driver.services.CustomerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.driver.model.Customer;
 import com.driver.model.Driver;
 import com.driver.repository.CustomerRepository;
 import com.driver.repository.DriverRepository;
 import com.driver.repository.TripBookingRepository;
-import com.driver.model.TripStatus;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
+class SortClass implements Comparator<Driver> {
+	@Override
+	public int compare(Driver o1, Driver o2) {
+		return o1.getDriverId() - o2.getDriverId();
+	}
+}
 @Service
 public class CustomerServiceImpl implements CustomerService {
 
@@ -29,84 +35,70 @@ public class CustomerServiceImpl implements CustomerService {
 
 	@Override
 	public void register(Customer customer) {
-		//Save the customer in database
 		customerRepository2.save(customer);
+		//Save the customer in database
 	}
 
 	@Override
 	public void deleteCustomer(Integer customerId) {
 		// Delete customer without using deleteById function
-		Customer customer = customerRepository2.findById(customerId).get();
-		customerRepository2.delete(customer);
-
-
+		customerRepository2.deleteById(customerId);
 	}
 
 	@Override
 	public TripBooking bookTrip(int customerId, String fromLocation, String toLocation, int distanceInKm) throws Exception{
 		//Book the driver with lowest driverId who is free (cab available variable is Boolean.TRUE). If no driver is available, throw "No cab available!" exception
 		//Avoid using SQL query
-	Driver driver = null;
-
-	List<Driver> driverList = driverRepository2.findAll();
-
-	for(Driver driver1:driverList)
-	{
-		if (driver1.getCab().getAvailable() == true)
-		{
-			if (driver==null||driver.getDriverId()>driver1.getDriverId())
-			{
-				driver = driver1;
+		List<Driver> drivers=driverRepository2.findAll();
+		Collections.sort(drivers,new SortClass());
+		Customer currCustomer=customerRepository2.findById(customerId).get();
+		Driver currDriver = null;
+		for(Driver driver:drivers){
+			if(driver.getCab().isAvailable()){
+				currDriver=driver;
+				break;
 			}
 		}
-	}
-	if (driver==null)
-	{
-		throw new Exception("No cab available");
-	}
-		Customer customer = customerRepository2.findById(customerId).get();
+		if(currDriver==null){
+			throw new Exception("No cab available!");
+		}
 
-		TripBooking tripBooking = new TripBooking();
-		tripBooking.setDistanceInKm(distanceInKm);
+		currDriver.getCab().setAvailable(false);
+
+		TripBooking tripBooking=new TripBooking();
+		tripBooking.setCustomer(currCustomer);
 		tripBooking.setFromLocation(fromLocation);
 		tripBooking.setToLocation(toLocation);
-		tripBooking.setCustomer(customer);
-		tripBooking.setDriver(driver);
-		driver.getCab().setAvailable(false);
-		tripBooking.setStatus(TripStatus.CONFIRMED);
+		tripBooking.setDistanceInKm(distanceInKm);
+		tripBooking.setBill(currDriver.getCab().getPerKmRate()*distanceInKm);
+		tripBooking.setTripStatus(TripStatus.CONFIRMED);
+		tripBooking.setDriver(currDriver);
 
-		customer.getTripBookingList().add(tripBooking);
-		driver.getTripBookingList().add(tripBooking);
+		currCustomer.getTripBookingList().add(tripBooking);
+		currDriver.getTripBookingList().add(tripBooking);
 
-		driverRepository2.save(driver);
-		customerRepository2.save(customer);
-
-		//this is child will be automatically saved.
+//		driverRepository2.save(currDriver);
+		tripBookingRepository2.save(tripBooking);
 		return tripBooking;
-
 	}
 
 	@Override
 	public void cancelTrip(Integer tripId){
 		//Cancel the trip having given trip Id and update TripBooking attributes accordingly
-		TripBooking tripBooking = tripBookingRepository2.findById(tripId).get();
-		tripBooking.setStatus(TripStatus.CANCELED);
-		tripBooking.setBill(0);
+		TripBooking tripBooking=tripBookingRepository2.findById(tripId).get();
+
+		tripBooking.setTripStatus(TripStatus.CANCELED);
 		tripBooking.getDriver().getCab().setAvailable(true);
 		tripBookingRepository2.save(tripBooking);
-
 	}
 
 	@Override
 	public void completeTrip(Integer tripId){
 		//Complete the trip having given trip Id and update TripBooking attributes accordingly
-          TripBooking tripBooking = tripBookingRepository2.findById(tripId).get();
-		  tripBooking.setStatus(TripStatus.COMPLETED);
-		  int bill = tripBooking.getDriver().getCab().getPerKmRate()*tripBooking.getDistanceInKm();
-		  tripBooking.getDriver().getCab().setAvailable(true);
+		TripBooking tripBooking=tripBookingRepository2.findById(tripId).get();
 
-		  tripBooking.setBill(bill);
-
-		  tripBookingRepository2.save(tripBooking);
+		tripBooking.setTripStatus(TripStatus.COMPLETED);
+		tripBooking.getDriver().getCab().setAvailable(true);
+		tripBookingRepository2.save(tripBooking);
 	}
 }
