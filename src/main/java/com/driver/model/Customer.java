@@ -31,11 +31,11 @@ public class Customer {
         this.tripBookingList = tripBookingList;
     }
 
-    public int getCustomerid() {
+    public int getCustomerId() {
         return customerId;
     }
 
-    public void setCustomerid(int customerid) {
+    public void setCustomerId(int customerId) {
         this.customerId = customerId;
     }
 
